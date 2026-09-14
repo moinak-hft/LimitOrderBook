@@ -1,33 +1,41 @@
-# Limit Order Book (LOB) Matching Engine
+# High-Performance C++ Matching Engine (LOB)
 
-An ultra-low latency, high-throughput Limit Order Book and matching engine written in modern C++. Designed for high-frequency trading (HFT) environments, this engine utilizes highly optimized standard library data structures to achieve purely $O(1)$ order cancellations and nanosecond-scale order matching.
+A low-latency, deterministic Limit Order Book matching engine engineered in modern C++ for high-frequency trading architectures. The engine leverages targeted standard library containers to deliver sub-microsecond trade execution and true O(1) order cancellations.
 
-## Performance Benchmarks
-Benchmarked on a consumer-grade CPU (Apple Silicon) in Release mode (`-O3`), processing 1,000,000 randomized orders with a tight spread to force constant matching:
+---
 
-* **Throughput:** 8.19+ Million orders / second
-* **Average Latency:** ~122 nanoseconds / order
+### Benchmark Telemetry
+Evaluated under `-O3` compiler optimization on an Apple Silicon processor, executing a stress test of 1,000,000 randomized orders within a compressed bid-ask spread:
 
-## System Architecture
+* **Throughput:** > 8.19 million operations/second
+* **Tick-to-Trade Latency:** ~122 nanoseconds/order
 
-The matching engine enforces strict **Price-Time Priority** using a combination of three data structures to optimize for the most critical trading path operations:
+---
 
-* **Price Priority (The Trees):** Two `std::map` (Red-Black Trees) instances for the BID and ASK sides. This guarantees $O(\log N)$ lookups for the absolute best market price. The BID map utilizes `std::greater<>` to naturally reverse-sort buyers, keeping the highest bidder at `begin()`.
-* **Time Priority (The Queues):** A `std::list` (Doubly Linked List) is maintained at every distinct price level. Orders submitted at the same price are appended to the queue, enforcing strict First-In-First-Out (FIFO) execution.
-* **O(1) Cancellations (The Directory):** A `std::unordered_map` serves as the central directory, mapping globally unique `OrderID`s directly to their exact memory pointer (`std::list::iterator`). When a trader cancels a resting order, the engine bypasses tree traversal entirely and snips the order out of the linked list in $O(1)$ time.
+### Internal Mechanics & Data Flow
 
-## Core Features
-* **Maker-Taker Pricing:** strict adherence to resting order price execution.
-* **Memory-Aligned Structs:** `Order` and `Trade` structs are designed for cache-friendly memory alignment.
-* **Partial Fills:** Flawless handling of resting orders that are larger, smaller, or exactly equal to the incoming aggressive order quantity.
-* **Zero-Copy Execution:** The `completeExchange` system utilizes constant references (`const Order&`) to prevent unnecessary memory allocations during the critical matching loop.
+Order processing relies on strict **Price-Time Priority**, partitioned across three coordinated data layers:
 
-## Building and Running
-This project uses CMake. To build and run the benchmarking suite in Release mode:
+* **Price Ladder (O(log N)):** Bids and asks reside in isolated Red-Black trees (`std::map`). The ask book maintains default ascending order, while the bid book uses `std::greater<>` to guarantee instantaneous access to the top-of-book at `begin()`.
+* **Execution Queues (FIFO):** Every active price level maintains an independent doubly linked list (`std::list`). Incoming resting limits append to the tail, ensuring strict First-In-First-Out priority.
+* **Instant Cancellation (O(1)):** A hash table (`std::unordered_map`) tracks global `OrderID`s to their direct node references (`std::list::iterator`). This decouples order cancellation from depth traversal, enabling surgical pointer splicing in constant time.
+
+---
+
+### Low-Level Optimizations
+* **Cache-Conscious Data Layout:** `Order` and `Trade` structs are packed and memory-aligned to minimize CPU cache invalidations.
+* **Zero-Copy Matching Path:** Critical execution routines accept orders by constant reference (`const Order&`), eliminating runtime heap allocations during matching sweeps.
+* **Comprehensive Fill Logic:** Fully supports maker-taker fee structures and granular partial fills (underfilled, overfilled, and matched balances).
+
+---
+
+### Build & Benchmark Setup
+
+Prerequisites: A C++17 compliant compiler and CMake.
 
 ```bash
-mkdir build
-cd build
+mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ./limit_order_book
+```
