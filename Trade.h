@@ -1,14 +1,12 @@
-//
-// Created by Oscar Zhang on 2026/2/28.
-//
-
 #pragma once
-#include <chrono>
+
 #include <cstdint>
 
 using std::uint64_t;
 
-struct alignas(64) Trade {
+// Participant identities and order identities are separate. Execution occurs at
+// the resting maker price; time is the incoming event time (or event sequence).
+struct Trade {
     uint64_t id;
     uint64_t sellerId;
     uint64_t buyerId;
@@ -16,10 +14,8 @@ struct alignas(64) Trade {
     uint64_t quantity;
     uint64_t price;
     uint64_t time;
-    Trade(uint64_t id, uint64_t quantity, uint64_t price, uint64_t instrumentId, uint64_t buyerId, uint64_t sellerId) :
-        id(id), sellerId(sellerId), buyerId(buyerId), instrumentId(instrumentId), quantity(quantity), price(price) {
-        time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count();
-    }
+    uint64_t sellerOrderId;
+    uint64_t buyerOrderId;
+    uint64_t makerOrderId;
+    uint64_t takerOrderId;
 };

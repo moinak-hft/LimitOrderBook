@@ -27,4 +27,7 @@
 .idea/
 cmake-build-*/
 build/
+work/
+reports/
+__pycache__/
 .DS_Store
