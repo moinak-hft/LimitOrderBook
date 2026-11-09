@@ -11,6 +11,7 @@ import csv
 import json
 import math
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 
@@ -104,13 +105,13 @@ def main() -> None:
     parser.add_argument("binary", type=Path, help="built limit_order_book executable")
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
-    project = Path(__file__).resolve().parent.parent
     calls = 0
 
-    def invoke(*arguments: str, expected: int = 0) -> subprocess.CompletedProcess[str]:
+    def invoke(*arguments: str, expected: int = 0,
+               executable: Path | None = None) -> subprocess.CompletedProcess[str]:
         nonlocal calls
         calls += 1
-        result = subprocess.run([str(binary), *map(str, arguments)], cwd=project,
+        result = subprocess.run([str(executable or binary), *map(str, arguments)], cwd=temporary,
                                 capture_output=True, text=True, timeout=60)
         check((result.returncode == 0) == (expected == 0),
               f"Unexpected exit {result.returncode}: {' '.join(map(str, arguments))}\n"
@@ -146,6 +147,18 @@ def main() -> None:
         check(default["meta"]["steps"] == 240, "default horizon remains 240 steps")
         repeated, _ = simulate("shock-again", scenario="shock", steps=48, quantity=1200, seed=42)
         check(repeated == shock, "same options must reproduce the entire report exactly")
+        # Copy only the binary, without the source tree or adjacent assets, to
+        # exercise the embedded report template from an unrelated working dir.
+        relocated_directory = temporary / "relocated"
+        relocated_directory.mkdir()
+        relocated_binary = relocated_directory / binary.name
+        shutil.copy2(binary, relocated_binary)
+        relocated_report = temporary / "relocated.html"
+        invoke("simulate", "--scenario", "shock", "--steps", "48", "--quantity", "1200",
+               "--seed", "42", "--output", relocated_report, executable=relocated_binary)
+        relocated = json.loads(relocated_report.with_suffix(".json").read_text(encoding="utf-8"))
+        check(relocated == shock and relocated_report.is_file(),
+              "relocated executable must render identical reports without source/assets")
         check(shock["runs"][0]["frames"][24]["fair"] < shock["runs"][0]["frames"][23]["fair"] - 30,
               "shock scenario must include a material downward shock")
         check(calm["meta"]["scenario"] == "calm" and rally["meta"]["scenario"] == "rally",

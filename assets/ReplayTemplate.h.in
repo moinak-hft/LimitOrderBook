@@ -1,0 +1,6 @@
+#pragma once
+#include <string_view>
+
+namespace lob::report {
+inline constexpr std::string_view templateHtml = R"LOB_REPORT(@LOB_REPORT_HTML_CHUNKS@)LOB_REPORT";
+}

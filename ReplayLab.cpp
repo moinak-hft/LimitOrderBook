@@ -1,5 +1,6 @@
 #include "ReplayLab.h"
 #include "OrderBook.h"
+#include "ReplayTemplate.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -220,15 +221,7 @@ std::string json(const SimulationOptions& o, const std::vector<Run>& runs) {
     return out.str();
 }
 std::string reportTemplate() {
-    std::vector<std::filesystem::path> candidates{"assets/replay.html"};
-#ifdef LOB_SOURCE_DIR
-    candidates.emplace_back(std::filesystem::path(LOB_SOURCE_DIR) / "assets/replay.html");
-#endif
-    for (const auto& candidate : candidates) {
-        std::ifstream file(candidate, std::ios::binary);
-        if (file) return std::string(std::istreambuf_iterator<char>(file), {});
-    }
-    throw std::runtime_error("Cannot find assets/replay.html; run from the project/build directory");
+    return std::string(lob::report::templateHtml);
 }
 void printRuns(const SimulationOptions& o, const std::vector<Run>& runs) {
     std::cout << "\nSynthetic " << o.scenario << " | seed " << o.seed << " | target " << o.quantity

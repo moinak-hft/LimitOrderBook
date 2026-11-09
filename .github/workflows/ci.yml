@@ -1,0 +1,43 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} / Release
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python for report integration tests
+        id: python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+
+      - name: Configure portable Release build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DLOB_NATIVE=OFF -DBUILD_TESTING=ON -DPython3_EXECUTABLE="${{ steps.python.outputs.python-path }}"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Run engine, CLI and report integration tests
+        run: ctest --test-dir build -C Release --output-on-failure

@@ -1,0 +1,6 @@
+"run","mean_ns_per_order","orders_per_second","flags"
+"1","237.02","4219053.244451945","-O3 -DNDEBUG -march=native"
+"2","251.96","3968883.949833307","-O3 -DNDEBUG -march=native"
+"3","260.11","3844527.3153665755","-O3 -DNDEBUG -march=native"
+"4","237.51","4210349.037935245","-O3 -DNDEBUG -march=native"
+"5","226.24","4420084.86562942","-O3 -DNDEBUG -march=native"

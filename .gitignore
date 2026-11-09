@@ -25,9 +25,15 @@
 
 # IDEs and Build directories
 .idea/
+.vs/
+.vscode/
 cmake-build-*/
 build/
 work/
 reports/
 __pycache__/
+CMakeUserPresets.json
+.env
+.env.*
+!.env.example
 .DS_Store

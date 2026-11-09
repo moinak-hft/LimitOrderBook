@@ -3,15 +3,17 @@ param(
     [string]$Mode = 'simulate',
     [ValidateSet('calm','rally','shock')]
     [string]$Scenario = 'shock',
+    [switch]$Native,
     [switch]$Portable
 )
 $ErrorActionPreference = 'Stop'
+if ($Native -and $Portable) { throw 'Choose either -Native or -Portable.' }
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location -LiteralPath $projectRoot
 try {
-    $buildName = if ($Portable) { 'portable' } else { 'release' }
+    $buildName = if ($Native) { 'native' } else { 'portable' }
     $buildPath = Join-Path $projectRoot "build\$buildName"
-    $nativeOption = if ($Portable) { 'OFF' } else { 'ON' }
+    $nativeOption = if ($Native) { 'ON' } else { 'OFF' }
     $cmakeArgs = @('-S', $projectRoot, '-B', $buildPath, '-DCMAKE_BUILD_TYPE=Release', "-DLOB_NATIVE=$nativeOption")
     if (-not (Test-Path -LiteralPath (Join-Path $buildPath 'CMakeCache.txt'))) {
         if (Get-Command ninja -ErrorAction SilentlyContinue) { $cmakeArgs += @('-G', 'Ninja') }
