@@ -86,10 +86,3 @@ Optional Python integration tests check replay exports, deterministic repeats, s
 
 This is an educational research engine. It has no durable recovery, risk gateway, self-trade prevention, authentication, networking, session protocol, or transactional recovery from allocation failures. See the detailed [engine and measurement boundaries](docs/benchmarking.md#boundaries).
 
-## Attribution and licensing
-
-Original source headers credit **Oscar Zhang**. The original downloaded files are retained in [`original/`](original/) for attribution and local comparisons. The supplied archive contained no Git history, upstream repository URL, or license file. See [source attribution](docs/ATTRIBUTION.md).
-
-No project-wide license is declared because the supplied snapshot did not include one. This repository extends the supplied project and retains the original author credits.
-
-For repository preparation and GitHub upload commands, see [publishing instructions](docs/PUBLISHING.md). See [contribution guidelines](CONTRIBUTING.md) for development checks.
